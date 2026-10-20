@@ -26,7 +26,7 @@ interface FormState {
  * automatically; the user lands on the ticket list afterwards.
  */
 export default function CreateTroubleTicket() {
-  const { t, pick } = useI18n()
+  const { t } = useI18n()
   const { refs, maps, bump } = useData()
   const { push } = useToast()
   const navigate = useNavigate()
@@ -47,6 +47,12 @@ export default function CreateTroubleTicket() {
       .catch(() => setCircuits([]))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Seat the default station once the reference data arrives
+  // (refs are null on first render while they load).
+  useEffect(() => {
+    setForm((f) => (f.station_id ? f : { ...f, station_id: refs?.stations[0]?.id ?? '' }))
+  }, [refs])
 
   const severityLabels: Record<string, string> = {
     low: t.om.low,

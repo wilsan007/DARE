@@ -17,7 +17,6 @@ import {
   Send,
   Ticket,
   Users,
-  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import type { Translations } from '@/i18n'
@@ -26,6 +25,14 @@ export interface NavItem {
   path: string
   labelKey: keyof Translations['nav']
   icon: LucideIcon
+}
+
+export interface NavGroup {
+  labelKey: keyof Translations['nav']
+  icon: LucideIcon
+  /** First child path — used as the group landing route. */
+  basePath: string
+  children: NavItem[]
 }
 
 export const capacityItems: NavItem[] = [
@@ -39,8 +46,34 @@ export const capacityItems: NavItem[] = [
 
 export const mainItems: NavItem[] = [{ path: '/', labelKey: 'dashboard', icon: Gauge }]
 
+export const maintenanceGroups: NavGroup[] = [
+  {
+    labelKey: 'troubleTicket',
+    icon: Ticket,
+    basePath: '/maintenance/trouble/new',
+    children: [
+      { path: '/maintenance/trouble/new', labelKey: 'createTroubleTicket', icon: FilePlus2 },
+      { path: '/maintenance/trouble', labelKey: 'troubleTicketDetail', icon: Ticket },
+    ],
+  },
+  {
+    labelKey: 'plannedMaintenance',
+    icon: CalendarPlus,
+    basePath: '/maintenance/planned/new',
+    children: [
+      { path: '/maintenance/planned/new', labelKey: 'createPlannedMaintenance', icon: FilePlus2 },
+      { path: '/maintenance/planned', labelKey: 'plannedMaintenanceDetail', icon: CalendarClock },
+    ],
+  },
+  {
+    labelKey: 'schedules',
+    icon: CalendarRange,
+    basePath: '/maintenance/schedules',
+    children: [{ path: '/maintenance/schedules', labelKey: 'schedules', icon: CalendarRange }],
+  },
+]
+
 export const secondaryItems: NavItem[] = [
-  { path: '/maintenance', labelKey: 'maintenance', icon: Wrench },
   { path: '/reports', labelKey: 'reports', icon: BarChart3 },
   { path: '/documents', labelKey: 'documents', icon: FolderOpen },
   { path: '/users', labelKey: 'users', icon: Users },
@@ -50,7 +83,29 @@ export const secondaryItems: NavItem[] = [
 ]
 
 export function findNavItem(pathname: string): NavItem | undefined {
-  const all = [...mainItems, ...capacityItems, ...secondaryItems]
-  if (pathname === '/') return all[0]
-  return all.find((item) => pathname.startsWith(item.path))
+  const flat: NavItem[] = [
+    ...mainItems,
+    ...capacityItems,
+    ...maintenanceGroups.flatMap((g) => g.children),
+    ...secondaryItems,
+  ]
+  if (pathname === '/') return flat[0]
+  // Longest-prefix match so child routes resolve to their own label.
+  let best: NavItem | undefined
+  for (const item of flat) {
+    if (item.path === '/') continue
+    if (pathname === item.path || pathname.startsWith(`${item.path}/`)) {
+      if (!best || item.path.length > best.path.length) best = item
+    }
+  }
+  return best
+}
+
+/** Maintenance section header shown in the Topbar when the Reports Documents … list does not own the label. */
+export function isMaintenancePath(pathname: string): boolean {
+  return pathname.startsWith('/maintenance')
+}
+
+export function findMaintenanceGroup(pathname: string): NavGroup | undefined {
+  return maintenanceGroups.find((g) => pathname.startsWith(g.basePath.split('/').slice(0, 3).join('/')) && g.children.some((c) => pathname === c.path || pathname.startsWith(`${c.path}/`)))
 }

@@ -50,6 +50,12 @@ export default function CreatePlannedMaintenance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Seat the default station once the reference data arrives
+  // (refs are null on first render while they load).
+  useEffect(() => {
+    setForm((f) => (f.station_id ? f : { ...f, station_id: refs?.stations[0]?.id ?? '' }))
+  }, [refs])
+
   const severityLabels: Record<string, string> = {
     low: t.om.low,
     medium: t.om.medium,
