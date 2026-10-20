@@ -30,7 +30,7 @@ interface FormState {
  */
 export function MaintenanceList({ kind }: { kind: 'trouble' | 'planned' }) {
   const { t, lang, pick } = useI18n()
-  const { maps, version, bump } = useData()
+  const { refs, maps, version, bump } = useData()
   const { push } = useToast()
   const [events, setEvents] = useState<MaintenanceEvent[] | null>(null)
   const [circuits, setCircuits] = useState<Circuit[]>([])
@@ -56,6 +56,7 @@ export function MaintenanceList({ kind }: { kind: 'trouble' | 'planned' }) {
     medium: t.om.medium,
     high: t.om.high,
     critical: t.om.critical,
+  }
 
   const columns: Column<MaintenanceEvent>[] = useMemo(() => {
     const base: Column<MaintenanceEvent>[] = []
@@ -88,7 +89,7 @@ export function MaintenanceList({ kind }: { kind: 'trouble' | 'planned' }) {
       {
         key: 'severity',
         header: t.om.severity,
-        sortValue: (m) => SEVERITIES.indexOf(m.severity as (typeof SEVERITIES)[number]),
+        sortValue: (m) => m.severity,
         render: (m) => <SeverityBadge severity={m.severity} />,
       },
       {
@@ -272,7 +273,7 @@ export function MaintenanceList({ kind }: { kind: 'trouble' | 'planned' }) {
             <Select
               label={t.om.station}
               required
-              options={(maps?.stations ?? []).map((s) => ({ value: s.id, label: s.name }))}
+              options={(refs?.stations ?? []).map((s) => ({ value: s.id, label: s.name }))}
               value={form.station_id}
               onChange={(e) => setForm({ ...form, station_id: e.target.value })}
             />
@@ -336,5 +337,3 @@ export function MaintenanceList({ kind }: { kind: 'trouble' | 'planned' }) {
     </div>
   )
 }
-
-  }
